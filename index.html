@@ -171,7 +171,7 @@
                 bullet.y += bullet.dy;
                 bullet.dy += gravity;
 
-                if (bullet.y > canvas.height) {
+                if (bullet.y > canvas.height || bullet.y < 0 || bullet.x > canvas.width || bullet.x < 0) {
                     bullets.splice(index, 1);
                 }
             });
@@ -225,14 +225,15 @@
             });
         }
 
-        function createBullet() {
+        function createBullet(angle) {
+            const bulletSpeed = 17;
             const bullet = {
                 x: player.direction === 'right' ? player.x + player.width : player.x,
                 y: player.y + player.height / 2,
                 radius: 8,
                 color: 'yellow',
-                dx: player.direction === 'right' ? 17 : -17,
-                dy: -2
+                dx: bulletSpeed * Math.cos(angle),
+                dy: bulletSpeed * Math.sin(angle) - 2
             };
             bullets.push(bullet);
         }
@@ -295,9 +296,8 @@
                     player.dy = player.jumpSpeed;
                 }
             } else {
-                player.direction = clickX > player.x ? 'right' : 'left';
-                player.x = player.direction === 'right' ? player.x + player.speed : player.x - player.speed;
-                createBullet();
+                const angle = Math.atan2(clickY - (player.y + player.height / 2), clickX - (player.x + player.width / 2));
+                createBullet(angle);
             }
         }
 
@@ -309,6 +309,13 @@
         function movePlayerRight() {
             player.dx = player.speed;
             player.direction = 'right';
+        }
+
+        function jumpPlayer() {
+            if (!player.isJumping) {
+                player.isJumping = true;
+                player.dy = player.jumpSpeed;
+            }
         }
 
         function pauseGame() {
@@ -342,10 +349,28 @@
         document.getElementById('resumeButton').addEventListener('click', resumeGame);
         document.getElementById('restartButton').addEventListener('click', restartGame);
 
+        // Keyboard controls
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft') {
+                movePlayerLeft();
+            } else if (event.key === 'ArrowRight') {
+                movePlayerRight();
+            } else if (event.key === 'ArrowUp') {
+                jumpPlayer();
+            }
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                player.dx = 0;
+            }
+        });
+
         setInterval(createZombie, 1000);
-       setInterval(createObstacle, 3000); // Create obstacles at regular intervals
+        setInterval(createObstacle, 3000); // Create obstacles at regular intervals
 
         update();
     </script>
 </body>
 </html>
+
